@@ -23,7 +23,7 @@ namespace HighscoreAPI.Controllers
 
         // GET: api/Highscores
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Highscore>>> GetHighScores()
+        public IEnumerable<Highscore> GetHighscores()
         {
 
 			//order the highscorelist
@@ -74,8 +74,9 @@ namespace HighscoreAPI.Controllers
 			return CreatedAtAction("GetHighScore", new { id = highscore.HighScoreId }, highscore);
 		}
 
-        // DELETE: api/Highscores/5
-        [HttpDelete("{id}")]
+
+		// DELETE: api/Highscores/5
+		[HttpDelete("{id}")]
         public async Task<ActionResult<Highscore>> DeleteHighscore(Guid id)
         {
             var highscore = await _context.HighScores.FindAsync(id);
@@ -94,5 +95,9 @@ namespace HighscoreAPI.Controllers
         {
             return _context.HighScores.Any(e => e.HighScoreId == id);
         }
-    }
+
+
+		
+
+	}
 }
