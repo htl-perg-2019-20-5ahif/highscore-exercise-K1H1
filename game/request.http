@@ -1,0 +1,15 @@
+@local = http://localhost:5000/api/Highscores
+
+###
+GET {{local}}
+Content-Type: application/json
+
+
+###
+POST {{local}}
+Content-Type: application/json
+
+{
+    "user": "katrin",
+    "score": 7
+}

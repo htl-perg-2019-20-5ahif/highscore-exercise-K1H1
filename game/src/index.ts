@@ -2,14 +2,24 @@ import { Scene, Types, CANVAS, Game, Physics, Input, GameObjects } from 'phaser'
 import { Spaceship, Direction } from './spaceship';
 import { Bullet } from './bullet';
 import { Meteor } from './meteor';
-
+import axios from "axios";
 /**
  * Space shooter scene
  * 
  * Learn more about Phaser scenes at 
  * https://photonstorm.github.io/phaser3-docs/Phaser.Scenes.Systems.html.
  */
+
+const _server = "http://localhost:5000/api/Highscores";
+
+
+interface Highscore {
+    user: string;
+    score: number;
+}
 class ShooterScene extends Scene {
+
+
     private spaceShip: Spaceship;
     private meteors: Physics.Arcade.Group;
     private bullets: Physics.Arcade.Group;
@@ -22,6 +32,7 @@ class ShooterScene extends Scene {
     private spaceKey: Input.Keyboard.Key;
     private isGameOver = false;
     private hits = 0;
+    private highscoreSent = false;
 
     preload() {
         // Preload images so that we can use them in our game
@@ -32,14 +43,26 @@ class ShooterScene extends Scene {
     }
 
     create() {
+        console.log('scores about to load');
+        this.getHighscores();
+
+        document.getElementById("submit_score").addEventListener("click", async () => {
+            if (this.isGameOver) {
+                const player = (document.getElementById("username") as HTMLInputElement).value;
+
+                this.sendHighscore(player, this.hits);
+                await this.showHighscores();
+            }
+        });
+
         if (this.isGameOver) {
             return;
         }
-        
+
         //  Add a background
         this.add.tileSprite(0, 0, this.game.canvas.width, this.game.canvas.height, 'space').setOrigin(0, 0);
 
-        this.points = this.add.text(this.game.canvas.width * 0.1, this.game.canvas.height * 0.1, "0", 
+        this.points = this.add.text(this.game.canvas.width * 0.1, this.game.canvas.height * 0.1, "0",
             { font: "32px Arial", fill: "#ff0044", align: "left" });
 
         // Create bullets and meteors
@@ -124,12 +147,49 @@ class ShooterScene extends Scene {
         this.spaceShip.kill();
 
         // Display "game over" text
-        const text = this.add.text(this.game.canvas.width / 2, this.game.canvas.height / 2, "Game Over :-(", 
+        const text = this.add.text(this.game.canvas.width / 2, this.game.canvas.height / 2, "Game Over :-(",
             { font: "65px Arial", fill: "#ff0044", align: "center" });
         text.setOrigin(0.5, 0.5);
+
+        if (!this.highscoreSent) {
+            this.showHighscores();
+        }
+    }
+
+    // --------------------------------------
+
+    async getHighscores() {
+        return (await axios.get(_server)).data;
+        console.log('scores loaded');
+
+    }
+
+
+
+    async showHighscores() {
+        const highscoreList: Highscore[] = await this.getHighscores();
+        const list = document.getElementById("highscoreList");
+        list.innerHTML = "";
+
+        //create highscore list
+        for (const highscore of highscoreList) {
+            const entry = document.createElement('li');
+            entry.appendChild(document.createTextNode(`${highscore.user}: ${highscore.score}`));
+            list.appendChild(entry);
+        }
+
+    }
+
+    async sendHighscore(user: string, highscore: number) {
+        console.log(user + " " + highscore);
+
+        await axios.post(_server, { user: user, score: highscore });
+        this.highscoreSent = true;
     }
 }
 
+
+//------------------------------------------
 const config = {
     type: CANVAS,
     width: 512,
